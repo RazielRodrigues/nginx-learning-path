@@ -1,0 +1,15 @@
+-- Comprar os erver na digital ocean
+
+Neste módulos vamos aprender como criar um servidor na DigitalOcean e pré-configurar ele para a instalação do Nginx.
+
+Comando para criar a chave:
+
+# ssh-keygen
+Comando SSH para acessar o servidor:
+
+ssh -i SUA_CHAVE root@SEU_IP
+Comandos usados para pré-configurar:
+
+# yum -y update
+# yum -y groupinstall "Development Tools"
+# yum -y install gd-devel pcre-devel openssl-devel

@@ -1,0 +1,63 @@
+Módulo 15 - Bonus | HTTPS com Letsencrypt
+Introdução:
+Irei mostrar aqui de forma fácil como instalar certificados TLS/SSL válidos usando o Let’s Encrypt e como fazer a renovação automática deles usando o serviço do Cron.
+
+Certificados SSL são usados em servidores web para criptografar a comunicação entre seu computador e o site que você esta acessando, de forma a garantir um segurança extra na troca de informações. Ter um site com HTTPS é tão importante que hoje em dia o GOOGLE da mais prioridade em exibir sites seguros nas suas buscas. E o Let’s Encrypt é um jeito fácil e gratis de se obter um certificado válido.
+
+Pre-requisitos:
+Nesse tutorial vou mostrar como instalar o Let’s Encrypt em um servidor CentOS 6.7 e como usa-lo com o webserver Nginx.
+
+Para que tudo de certo você irá precisar ter acesso ROOT ao servidor.
+
+Passo 1 – Instalar o Python 2.7 e GIT
+# Instalar o repositório Epel
+
+yum install epel-release  
+# Instalar o repositório IUS
+
+ rpm -ivh <a href="https://rhel6.iuscommunity.org/ius-release.rpm">https://rhel6.iuscommunity.org/ius-release.rpm</a>   
+# Instalar o Python 2.7
+
+ yum --enablerepo=ius install python27 python27-devel python27-pip python27-setuptools python27-virtualenv -y
+# Instalar o GIT
+
+yum install git
+Passo 2 – Fazer o Download do cliente do Let’s Encrypt
+O melhor jeito para termos a versão mais recente do Let’s Encrypt é clonando os arquivos via GIT, dessa forma além de instalar a versão mais recente ficará muito fácil você atualizar depois.
+
+cd /root/
+git clone https://github.com/letsencrypt/letsencrypt
+Passo 3 – Criando uma location no nginx
+Vamos agora criar uma location dentro das configurações do nginx para que o nginx possa responder a verificação feita pelo Let’s Encrypt. É importante colocar essa location em todos os blocos de server da sua configuração que você queira instalar o certificado SSL. Iremos colocar a location dentro do bloco da porta 80.
+
+location '/.well-known/acme-challenge' {
+         default_type "text/plain";
+         root /tmp/letsencrypt-auto;
+}
+Passo 4 – Obtendo os certificados com Let’s Encrypt
+Agora vamos vamos até o diretório a onde você colocou os arquivos do Let’s Encrypt e vamos usar o cliente dele para obter os nossos certificados. Uma coisa importante aqui é este comando que irei mostrar serve para você criar novos certificados para vários sites ao mesmo tempo, de forma que o certificado já venha pronto para trabalhar dentro do padrão SNI, ou seja, você poderá ter vários sites usando HTTPS sobre o mesmo IP.
+
+cd /root/letsencrypt
+export DOMAINS="-d site1.com -d site2.com -d site3.com"
+export DIR=/tmp/letsencrypt-auto
+mkdir -p $DIR && letsencrypt certonly --server https://acme-v01.api.letsencrypt.org/directory -a webroot --webroot-path=$DIR --agree-dev-preview $DOMAINS
+Passo 5 – Usando os certificados com o Nginx
+Nesse momento o Let’s Encrypt já criou os certificados dentro do diretório /etc/letsencrypt/. Nesse diretório você irá notar que temos vários sub-diretórios, se divirta venda cada um deles. Uma coisa importante aqui é dar permissão para o nginx nos arquivos do certificado.
+
+Para o Nginx usar o certificados gerados pelo Let’s Encrypt é só usar a configuração padrão, dentro do bloco de server com listen na porta 443 acrescente a linhas de exemplo abaixo:
+
+ssl on;
+ssl_certificate /usr/local/nginx/conf/ssl/site1.com/fullchain1.pem;
+ssl_certificate_key /usr/local/nginx/conf/ssl/site1.com/privkey1.pem;
+ssl_protocols SSLv3 TLSv1 TLSv1.1 TLSv1.2; # default on newer versions
+ssl_ciphers ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:RC4-SHA:RC4-MD5:ECDHE-RSA-AES256-SHA:AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:DES-CBC3-SHA:AES128-SHA;
+ssl_prefer_server_ciphers on;
+ssl_session_cache builtin:1000 shared:SSL:10m;
+Passo 6 – Fazendo a renovação automática dos certificados
+Para renovar todos os seus certificados de forma automática basta inserir as linhas abaixo dentro CRON do seu sistema. Para isso podemos usar os comandos “vi” e editar o arquivo /etc/crontab ou podemos usar o comando “crontab -e”. Vamos inserir as linhas abaixo:
+
+# Certificado SSL
+30 2 * * 1 root /root/letsencrypt/letsencrypt-auto renew >> /var/log/le-renew.log
+35 2 * * 1 root /etc/init.d/nginx restart
+Conclusão
+Hoje em dia é muito importante manter os seus sites sempre com um certificado SSL, além de oferecer mais segurança para seus visitantes, esse também é um fator muito relevante para otimizar sua presença na web, o Google por exemplo da muito peso para sites com HTTPS.

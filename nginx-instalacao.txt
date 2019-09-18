@@ -1,0 +1,47 @@
+Criar o servidor:
+1. Antes de acessar o servidor é necessario criar ele no serviço desejado.
+2. Após criar ele escolhe o tipo de distruibuição, e adiciona a chave publica.
+
+Comando para criar a chave e acessar o servidor:
+
+# ssh-keygen
+
+Comando SSH para acessar o servidor:
+
+ssh -i SUA_CHAVE root@SEU_IP
+Comandos usados para pré-configurar:
+
+Pré configuração pro nginx e development tools para se for usar com outras coisas.
+
+Comando para atualizar o server = # yum -y update
+Instalar dev tools = # yum -y groupinstall "Development Tools"
+Pacotes necessários para o NGINX = # yum -y install gd-devel pcre-devel openssl-devel
+
+Instalação do NGINX:
+
+site das relases do nginx: https://www.nginx.com/resources/wiki/start/topics/tutorials/install/#
+
+-pega o arquivo zipado = wget LINK_DA_MAINLINE 
+
+descompacta o arquivo = tar zxvf nome_arquivo
+
+verifica se ta ok = make
+
+instala = make install
+
+# cd nginx-1.9.5
+# ./configure
+
+== aqui acessa o arquivo config e adiciona novos modulos ==
+
+# ./configure nome_modulo
+# make
+# insttall
+
+== verificar se ta ok ==
+ 
+# ls -la /usr/local/nginx
+# /usr/local/nginx/sbin/nginx -V
+
+# make
+# make install

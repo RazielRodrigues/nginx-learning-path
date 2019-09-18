@@ -1,0 +1,43 @@
+Módulo 16 - Bonus | TRANSFORMANDO SUBDOMÍNIOS EM ROTAS COM O NGINX
+Vamos partir da ideia de que você queira oferecer aos usuários do seu site um subdomínio, algo do tipo, http://usuario.seusite.com. E quando essa URL for acessada, você tenha que redirecioná-la a uma rota interna da sua aplicação para poder exibir a pagina de seu usuário no browser. Então vamos lá, como fazer isso usando o nginx:
+
+Primeiro passo é setar o seu DNS para responder a todos os subdomínios, crie uma entrada do tipo CNAME com o valor *, assim:
+
+< imagem pra ter de exemplo https://hotmart.s3.amazonaws.com/membership_area/83138053-c3e2-4840-bc57-26cd235c3039/entrada_cname.png >
+
+
+Agora que seu domínio responde para todos os subdomínios vamos por o NGINX para entender isso. Vamos começar editando o arquivo nginx.conf para incluirmos um mapeamento da variável $host:
+
+map $host $new {
+        seusite.com 0;
+        www.seusite.com 0;
+        subdominioquenaoehrota.seusite.com 0;
+        default 1;
+}
+O bloco “map” deve estar dentro do bloco “html” e no mesmo nível do bloco “server”, todos os subdomínios que você não queira transformar em rotas devem ser setados com o valor 0. A partir dai devemos editar o seu bloco “server” correspondente ao “seusite.com” para incluirmos os parâmetros de redirecionamentos:
+
+server {
+        listen  80;
+        server_name *.seusite.com;
+
+        if ($new = 1) {
+             return 390;
+        }
+
+        error_page 390 = @newdomain;
+
+        location @newdomain {
+              set $subdomain "";
+              if ($host ~* "^(.+).seusite.com$") {
+                  set $subdomain $1;
+                  return 301 http://seusite.com/$subdomain;
+              }
+        }
+
+        location / {
+                root  /seu/diretorio/com/aplicacao/;
+                index  index.html;
+        }
+
+}
+Para que você entenda o bloco de “server”, na diretiva “server_name” use “*.seusite.com” para que todos os subdomínios sejam aceitos, seguindo a mesma ideia do DNS. No bloco de “if” estamos dizendo que sempre que a variável $new for igual a 1 iremos devolver um código de erro HTTP no valor 390, logo abaixo seto o parâmetro “error_page” com valor 390 para responder no bloco de “location” com o nome @newdomain. E é neste bloco qua a mágica acontece, ali eu seto a variável “$subdomain” com o valor que vier do “*” em “*.seusite.com” e redireciono tudo para a URL “http://seusite.com/$subdomain”. E para finalizar temos o “location /” para resolver todo o resto.

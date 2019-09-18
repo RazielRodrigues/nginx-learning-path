@@ -1,0 +1,30 @@
+Professor O arquivo index se encontra na pasta /usr/local/nginx/httml e o href do arquivo pdf é ./networkr.pdf significando que está pedindo um arquivo que estaria na pasta raiz (/). Então o comando usado no bloco location no caso de arquivos terminados em .pdf seria redirecionar o pedido para a pasta /data/files. É isso mesmo?
+
+Marcio Nobrega · Produtor @Anderson A.
+Isso mesmo. O comando root ou document_root define a onde o nginx irá procurar o arquivo. Nesse caso o caminho completo que o nginx esta olhando é /data/files/networkr.pdf
+
+
+====
+
+
+Anderson A.
+Será que posso usar o padrão front controler PHP com SET ou MAP?
+Professor tenho a seguinte situação que uso em meus projetos no apache um htaccess com as seguintes regras RewriteEngine On Options All -Indexes RewriteCond %{SCRIPT_FILENAME} !-f RewriteCond %{SCRIPT_FILENAME} !-d RewriteRule ^(.*)$ index.php?url=$1 Basicamente está dizendo que os url que não forem diretórios ou arquivos irão para o arquivo index.php sendo que o url (nessa regra denominado de url) pode ser recebida no index.php como uma variavel que pode ser recebida por um $_GET. Existe uma forma de fazer isso no NGINX? O uso de SET e MAP seria o caminho para isso?
+  05/11/2017
+
+Marcio Nobrega · Produtor @Anderson A.
+Olá, nesse caso não é necessário o uso do set ou do map, você pode fazer esse rewrite dentro da propria location, ficando algo do tipo: location / { $uri $uri/ index.php?url=$1; }
+  06/11/2017
+A
+
+Anderson A. @Marcio Nobrega
+Ttudo bem Marcio? Craindo uma location com essa configuração o nginx me dá a seguinte resposta nginx: [emerg] unknown directive "$uri" in /usr/local/nginx/conf/conf.d/andersonandrade.blog.br.conf:17
+  09/11/2017
+A
+
+Anderson A.
+Márcio beleza? Só para constar consegui achar a resposta. A configuração ficou assim: location / { root /usr/local/nginx/html/andersonandrade.blog.br; index index.html index.htm index.php; try_files $uri $uri/ /index.php?url=$request_uri;	}
+  10/11/2017
+
+Marcio Nobrega · Produtor @Anderson A.
+Oi Anderson, O Set e o Map não funcionaria para isso, o ideal é usar o rewrite mesmo, seguindo a mesma logica. Você vai precisar fazer uma location para isso. Aqui te uma boa explicação disso: https://www.nginx.com/blog/creating-nginx-rewrite-rules/
